@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Prueba de Carga</title>
+</head>
+<body>
+    <h1>Página de prueba</h1>
+    <p>Revisando la consola...</p>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script src="./lrm-openrouteservice.js"></script>
+
+    <script>
+        console.log("Comprobando si L.Routing.ors existe...");
+        
+        if (L && L.Routing && L.Routing.ors) {
+            console.log("¡ÉXITO! La función L.Routing.ors se ha cargado correctamente.");
+            console.log("Definición de la función:", L.Routing.ors);
+        } else {
+            console.error("FALLO: La función L.Routing.ors NO EXISTE (es undefined).");
+            console.log("Esto confirma que el archivo lrm-openrouteservice.js no se está cargando.");
+        }
+    </script>
+</body>
+</html>
