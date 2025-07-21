@@ -633,16 +633,14 @@ function verificarInstruccionesCercanas() {
                 updateRouteStatus('Necesitamos tu ubicación para la ruta...', 'loading');
                 await requestUserLocationOnce(); 
             }
+            startWatchingUserLocation(); // ⬅️ empieza a seguirte después de calcular la ruta
 
-            // El resto del código se ejecuta solo después de tener la ubicación.
             if (!selectedDestinationCoords) {
                 updateRouteStatus('Por favor, selecciona un destino del mapa o la lista.', 'error');
                 return;
             }
 
             if (routingControl) map.removeControl(routingControl);
-            
-            // Mostrar el marcador del destino
             const destinationSiteId = currentSiteIdInput.value;
             if (destinationSiteId && markers[destinationSiteId]) {
                 if(visibleSiteMarker) map.removeLayer(visibleSiteMarker);
