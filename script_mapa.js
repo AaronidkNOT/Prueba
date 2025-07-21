@@ -83,31 +83,70 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!texto || typeof texto !== 'string') return texto;
 
     return texto
-        .replace(/^Head southeast\b/i, "Dirígete hacia el sureste")
-        .replace(/^Head northeast\b/i, "Dirígete hacia el noreste")
-        .replace(/^Head north\b/i, "Dirígete hacia el norte")
-        .replace(/^Head south\b/i, "Dirígete hacia el sur")
-        .replace(/^Head east\b/i, "Dirígete hacia el este")
-        .replace(/^Head west\b/i, "Dirígete hacia el oeste")
+        // Direcciones iniciales
+        .replace(/^Head (northwest)\b/i, "Dirígete hacia el noroeste")
+        .replace(/^Head (northeast)\b/i, "Dirígete hacia el noreste")
+        .replace(/^Head (southwest)\b/i, "Dirígete hacia el suroeste")
+        .replace(/^Head (southeast)\b/i, "Dirígete hacia el sureste")
+        .replace(/^Head (north)\b/i, "Dirígete hacia el norte")
+        .replace(/^Head (south)\b/i, "Dirígete hacia el sur")
+        .replace(/^Head (east)\b/i, "Dirígete hacia el este")
+        .replace(/^Head (west)\b/i, "Dirígete hacia el oeste")
 
+        // Giros
+        .replace(/^Turn right onto (.+)/i, "Gira a la derecha hacia $1")
+        .replace(/^Turn left onto (.+)/i, "Gira a la izquierda hacia $1")
         .replace(/^Turn right\b/i, "Gira a la derecha")
         .replace(/^Turn left\b/i, "Gira a la izquierda")
+        .replace(/^Make a sharp right\b/i, "Gira cerradamente a la derecha")
+        .replace(/^Make a sharp left\b/i, "Gira cerradamente a la izquierda")
+        .replace(/^Make a slight right\b/i, "Gira levemente a la derecha")
+        .replace(/^Make a slight left\b/i, "Gira levemente a la izquierda")
 
-        .replace(/^Enter the traffic circle and take the (\d)(st|nd|rd|th) exit onto (.+)/i, "Entra a la rotonda y toma la $1ᵃ salida hacia $3")
+        // Continuar
+        .replace(/^Continue straight\b/i, "Continúa recto")
+        .replace(/^Continue on (.+)/i, "Continúa por $1")
+        .replace(/^Continue\b/i, "Continúa")
+
+        // Mantenerse
+        .replace(/^Keep right\b/i, "Mantente a la derecha")
+        .replace(/^Keep left\b/i, "Mantente a la izquierda")
+
+        // Carriles
+        .replace(/^Use the right lane\b/i, "Usa el carril derecho")
+        .replace(/^Use the left lane\b/i, "Usa el carril izquierdo")
+
+        // Salidas
+        .replace(/^Take the exit toward (.+)/i, "Toma la salida hacia $1")
+        .replace(/^Take the (\d+)(st|nd|rd|th) exit\b/i, "Toma la $1ᵃ salida")
+
+        // Rotondas
+        .replace(/^Enter the traffic circle and take the (\d+)(st|nd|rd|th) exit onto (.+)/i, "Entra a la rotonda y toma la $1ᵃ salida hacia $3")
         .replace(/^Exit the traffic circle onto (.+)/i, "Sal de la rotonda hacia $1")
-        .replace(/^Enter the traffic circle and take the (\d)(st|nd|rd|th) exit\b/i, "Entra a la rotonda y toma la $1ᵃ salida")
+        .replace(/^Enter the traffic circle and take the (\d+)(st|nd|rd|th) exit\b/i, "Entra a la rotonda y toma la $1ᵃ salida")
         .replace(/^Exit the traffic circle\b/i, "Sal de la rotonda")
 
+        // Llegada
         .replace(/^You have arrived at your destination, on the right/i, "Has llegado a tu destino, a la derecha")
         .replace(/^You have arrived at your destination, on the left/i, "Has llegado a tu destino, a la izquierda")
-        .replace(/^You have arrived at your destination\b/i, "Has llegado a tu destino");
+        .replace(/^You have arrived at your destination\b/i, "Has llegado a tu destino")
+
+        // Vuelta en U
+        .replace(/^Make a U-turn\b/i, "Haz un giro en U")
+
+        // Desvíos
+        .replace(/^Take the ramp on the right\b/i, "Toma la salida a la derecha")
+        .replace(/^Take the ramp on the left\b/i, "Toma la salida a la izquierda")
+
+        // Por defecto, si no se traduce
+        .replace(/^/, texto);
 }
 
-    // NUEVA FUNCIÓN: Para hablar una secuencia de instrucciones sin interrupciones
+
     function speakInstructionSequentially(instructions, index) {
         if (index >= instructions.length) {
             console.log("Todas las instrucciones han sido habladas.");
-            return; // Todas las instrucciones han terminado
+            return;
         }
 
         const rawText = instructions[index].text;
@@ -122,14 +161,13 @@ if (/traffic circle/i.test(rawText)) {
 const currentInstructionText = traducirInstruccion(rawText);
 
 
-        console.log("Hablando instrucción secuencial:", currentInstructionText); // Para depuración
+        console.log("Hablando instrucción secuencial:", currentInstructionText);
         
         if (!('speechSynthesis' in window) || speechSynth === null) {
             console.warn("API de Síntesis de Voz no disponible o no inicializada para secuencia.");
             return;
         }
 
-        // NO usamos speechSynth.cancel() aquí para no interrumpir la secuencia interna.
         const utterance = new SpeechSynthesisUtterance(currentInstructionText);
         utterance.lang = 'es-ES';
 
@@ -161,22 +199,16 @@ const currentInstructionText = traducirInstruccion(rawText);
         // 1. Intentar encontrar una voz de Google en español de España
         spanishVoice = voices.find(voice => voice.lang === 'es-ES' && voice.name.includes('Google español'));
 
-        // 2. Si no se encuentra, buscar cualquier voz de Google en español
         if (!spanishVoice) {
             spanishVoice = voices.find(voice => voice.lang.startsWith('es') && voice.name.includes('Google español'));
         }
-
-        // 3. Si aún no se encuentra, buscar una voz de Microsoft Helena (común en Windows)
         if (!spanishVoice) {
             spanishVoice = voices.find(voice => voice.lang === 'es-ES' && voice.name.includes('Microsoft Helena'));
         }
 
-        // 4. Si aún no se encuentra, buscar cualquier voz de español de España
         if (!spanishVoice) {
             spanishVoice = voices.find(voice => voice.lang === 'es-ES');
         }
-
-        // 5. Si aún no se encuentra, buscar cualquier voz en español
         if (!spanishVoice) {
             spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
         }
