@@ -80,18 +80,19 @@ document.addEventListener('DOMContentLoaded', function () {
         speechSynth.speak(utterance);
     }
     function traducirInstruccion(texto) {
+    // Si el texto no es válido o no es una cadena, lo devuelve tal cual.
     if (!texto || typeof texto !== 'string') return texto;
 
     return texto
         // Direcciones iniciales
-        .replace(/^Head (northwest)\b/i, "Dirígete hacia el noroeste")
-        .replace(/^Head (northeast)\b/i, "Dirígete hacia el noreste")
-        .replace(/^Head (southwest)\b/i, "Dirígete hacia el suroeste")
-        .replace(/^Head (southeast)\b/i, "Dirígete hacia el sureste")
-        .replace(/^Head (north)\b/i, "Dirígete hacia el norte")
-        .replace(/^Head (south)\b/i, "Dirígete hacia el sur")
-        .replace(/^Head (east)\b/i, "Dirígete hacia el este")
-        .replace(/^Head (west)\b/i, "Dirígete hacia el oeste")
+        .replace(/^Head northwest\b/i, "Dirígete hacia el noroeste")
+        .replace(/^Head northeast\b/i, "Dirígete hacia el noreste")
+        .replace(/^Head southwest\b/i, "Dirígete hacia el suroeste")
+        .replace(/^Head southeast\b/i, "Dirígete hacia el sureste")
+        .replace(/^Head north\b/i, "Dirígete hacia el norte")
+        .replace(/^Head south\b/i, "Dirígete hacia el sur")
+        .replace(/^Head east\b/i, "Dirígete hacia el este")
+        .replace(/^Head west\b/i, "Dirígete hacia el oeste")
 
         // Giros
         .replace(/^Turn right onto (.+)/i, "Gira a la derecha hacia $1")
@@ -136,10 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Desvíos
         .replace(/^Take the ramp on the right\b/i, "Toma la salida a la derecha")
-        .replace(/^Take the ramp on the left\b/i, "Toma la salida a la izquierda")
-
-        // Por defecto, si no se traduce
-        .replace(/^/, texto);
+        .replace(/^Take the ramp on the left\b/i, "Toma la salida a la izquierda");
 }
 
 
