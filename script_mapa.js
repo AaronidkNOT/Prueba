@@ -42,6 +42,14 @@ document.addEventListener('DOMContentLoaded', function () {
     let speechSynth = null; // Variable para el sintetizador de voz, inicializada en onvoiceschanged
     let spanishVoice = null; // Variable para almacenar la voz en español seleccionada
 
+    function inicializarVoz() {
+    if (!speechSynthesis) return;
+
+    const dummy = new SpeechSynthesisUtterance('');
+    dummy.lang = 'es-ES';
+    speechSynthesis.speak(dummy); // Necesario para desbloquear voces en móviles
+}
+
     // Función para hablar una instrucción individual (puede cancelar la anterior)
     function speakInstruction(text) {
         if (!('speechSynthesis' in window) || speechSynth === null) {
@@ -272,7 +280,11 @@ const currentInstructionText = traducirInstruccion(rawText);
             hideSearchPanel();
         });
 
-        if (rutaAutoBtn) rutaAutoBtn.addEventListener('click', () => mostrarRuta('driving'));
+        if (rutaAutoBtn) rutaAutoBtn.addEventListener('click', () => {
+        inicializarVoz(); // 👈 Desbloquea la voz en móviles
+        mostrarRuta('driving');
+        });
+
         
         window.addEventListener('beforeunload', () => {
             if (locationWatchId) {
