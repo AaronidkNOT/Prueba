@@ -714,15 +714,34 @@ router: L.Routing.osrmv1({
     init();
 });
 // Mostrar el botón solo si es iPhone/iPad
+// Mostrar el botón solo si es iPhone/iPad
 const esIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
-
 if (esIOS) {
     const activarVozBtn = document.getElementById('activarVozIOS');
-    activarVozBtn.style.display = 'block';
+    if (activarVozBtn) {
+        activarVozBtn.style.display = 'block';
 
-    activarVozBtn.addEventListener('click', () => {
-        inicializarVoz();
-        activarVozBtn.style.display = 'none';
-        alert("🔊 Instrucciones por voz habilitadas.");
-    });
+        activarVozBtn.addEventListener('click', () => {
+            // Forzar carga de voces
+            const utterance = new SpeechSynthesisUtterance("Instrucciones por voz activadas");
+            utterance.lang = 'es-ES';
+
+            window.speechSynthesis.onvoiceschanged = () => {
+                speechSynth = window.speechSynthesis;
+                const voices = speechSynth.getVoices();
+                spanishVoice = voices.find(v => v.lang.startsWith("es") && v.name.includes("Google"))
+                            || voices.find(v => v.lang === "es-ES")
+                            || voices.find(v => v.lang.startsWith("es"));
+                
+                if (spanishVoice) utterance.voice = spanishVoice;
+            };
+
+            speechSynth = window.speechSynthesis;
+            speechSynth.cancel(); // por si estaba hablando algo
+            speechSynth.speak(utterance);
+
+            activarVozBtn.style.display = 'none';
+            alert("🔊 Instrucciones por voz habilitadas.");
+        });
+    }
 }
