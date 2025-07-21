@@ -39,15 +39,15 @@ document.addEventListener('DOMContentLoaded', function () {
     let locationWatchId = null;
 
     // --- VARIABLES Y FUNCIONES PARA SÍNTESIS DE VOZ ---
-    let speechSynth = null; // Variable para el sintetizador de voz, inicializada en onvoiceschanged
-    let spanishVoice = null; // Variable para almacenar la voz en español seleccionada
+    let speechSynth = null;
+    let spanishVoice = null;
 
     function inicializarVoz() {
     if (!speechSynthesis) return;
 
     const dummy = new SpeechSynthesisUtterance('');
     dummy.lang = 'es-ES';
-    speechSynthesis.speak(dummy); // Necesario para desbloquear voces en móviles
+    speechSynthesis.speak(dummy);
 }
 
     // Función para hablar una instrucción individual (puede cancelar la anterior)
@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
         speechSynth.speak(utterance);
     }
     function traducirInstruccion(texto) {
-    // Si el texto no es válido o no es una cadena, lo devuelve tal cual.
     if (!texto || typeof texto !== 'string') return texto;
 
     return texto
@@ -311,7 +310,7 @@ const currentInstructionText = traducirInstruccion(rawText);
         });
 
         if (rutaAutoBtn) rutaAutoBtn.addEventListener('click', () => {
-        inicializarVoz(); // 👈 Desbloquea la voz en móviles
+        inicializarVoz();
         mostrarRuta('driving');
         });
 
@@ -714,3 +713,16 @@ router: L.Routing.osrmv1({
     // Llama a la función de inicialización del script
     init();
 });
+// Mostrar el botón solo si es iPhone/iPad
+const esIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
+
+if (esIOS) {
+    const activarVozBtn = document.getElementById('activarVozIOS');
+    activarVozBtn.style.display = 'block';
+
+    activarVozBtn.addEventListener('click', () => {
+        inicializarVoz();
+        activarVozBtn.style.display = 'none';
+        alert("🔊 Instrucciones por voz habilitadas.");
+    });
+}
