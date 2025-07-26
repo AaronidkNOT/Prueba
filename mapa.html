@@ -6,11 +6,11 @@
     <title>Explora Carhué - Mapa Interactivo</title>
     <meta name="description" content="Encuentra restaurantes, atracciones y servicios en Carhué con nuestro mapa interactivo.">
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    
+    <link rel="icon" type="image/png" href="imagenes/favicon.png">
+    <link rel="apple-touch-icon" href="imagenes/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="estilos_mapa.css">
 </head>
@@ -40,6 +40,8 @@
 
         <main class="map-area" role="application" aria-label="Mapa interactivo de Carhué">
             <div id="map"></div>
+            <button id="toggleBasemapBtn" class="toggle-basemap-btn">🛰️ Satélite</button>
+
         </main>
 
         <aside id="info-panel" class="info-panel info-panel-right hidden" role="region" aria-labelledby="site-name" aria-hidden="true">
@@ -114,11 +116,11 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 ">🔊 Toca aquí para activar la voz</button>
+<link href='https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.css' rel='stylesheet' />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+    <script src='https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js'></script>
+    
+    <script src="script_mapa.js"></script>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-
-<script src="script_mapa.js"></script>
 </body>
 </html>

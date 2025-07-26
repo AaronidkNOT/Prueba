@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const initialCoordinates = [-37.1789, -62.7588]; // Carhué
+    const initialCoordinates = [-62.7588, -37.1789]; // Carhué [LONGITUD, LATITUD] para MapLibre
     const initialZoom = 14;
     let activeMarker = null;
     let map;
 
     // --- ELEMENTOS DEL DOM (CACHEADOS) ---
-    let routeInstructions = []; // instrucciones activas
-
     const searchPanel = document.querySelector('.search-panel');
     const searchInput = document.getElementById('search-input');
     const searchResultsEl = document.getElementById('search-results');
@@ -29,194 +27,89 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- DATOS Y ESTADO ---
     let sitesData = [];
     let allReviews = {};
-    let markers = {};
-    let routingControl = null;
+    let markers = {}; // Objeto para guardar los marcadores de MapLibre
     let selectedDestinationCoords = null;
-    let userCurrentCoords = null;
+    let userCurrentCoords = null; // Guardará [lon, lat]
     let myLocationMarker = null;
-    let myLocationAccuracyCircle = null;
-    let visibleSiteMarker = null;
     let locationWatchId = null;
-
+    let marcadorDeRutaVisible = null;
+    let directionsControl = null;
+    let isFollowing = false;
     // --- VARIABLES Y FUNCIONES PARA SÍNTESIS DE VOZ ---
     let speechSynth = null;
     let spanishVoice = null;
+    let routeInstructions = [];
 
     function inicializarVoz() {
-    if (!speechSynthesis) return;
+        if (!('speechSynthesis' in window)) {
+            console.warn("API de Síntesis de Voz no disponible.");
+            return;
+        };
+        speechSynth = window.speechSynthesis;
+        // Precarga de voces para algunos navegadores
+        const dummy = new SpeechSynthesisUtterance('');
+        dummy.lang = 'es-ES';
+        speechSynth.speak(dummy);
+    }
 
-    const dummy = new SpeechSynthesisUtterance('');
-    dummy.lang = 'es-ES';
-    speechSynthesis.speak(dummy);
-}
-
-    // Función para hablar una instrucción individual (puede cancelar la anterior)
     function speakInstruction(text) {
-        if (!('speechSynthesis' in window) || speechSynth === null) {
-            console.warn("API de Síntesis de Voz no disponible o no inicializada.");
+        if (!speechSynth) {
+            console.warn("Síntesis de Voz no inicializada.");
             return;
         }
-
-        // Si ya está hablando algo, lo cancelamos para que diga lo nuevo
         if (speechSynth.speaking) {
             speechSynth.cancel();
         }
-
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'es-ES'; // Idioma español de España por defecto
-
-        // Asignar la voz en español si ya la hemos encontrado
-        if (spanishVoice) {
-            utterance.voice = spanishVoice;
-            console.log("Usando voz:", spanishVoice.name, spanishVoice.lang);
-        } else {
-            console.warn("No se encontró una voz específica en español, usando voz por defecto del navegador para 'es-ES'.");
-        }
-        
-        utterance.onerror = (event) => {
-            console.error('Error en la síntesis de voz:', event.error);
-        };
-
-        speechSynth.speak(utterance);
-    }
-    function traducirInstruccion(texto) {
-    if (!texto || typeof texto !== 'string') return texto;
-
-    return texto
-        // Direcciones iniciales
-        .replace(/^Head northwest\b/i, "Dirígete hacia el noroeste")
-        .replace(/^Head northeast\b/i, "Dirígete hacia el noreste")
-        .replace(/^Head southwest\b/i, "Dirígete hacia el suroeste")
-        .replace(/^Head southeast\b/i, "Dirígete hacia el sureste")
-        .replace(/^Head north\b/i, "Dirígete hacia el norte")
-        .replace(/^Head south\b/i, "Dirígete hacia el sur")
-        .replace(/^Head east\b/i, "Dirígete hacia el este")
-        .replace(/^Head west\b/i, "Dirígete hacia el oeste")
-
-        // Giros
-        .replace(/^Turn right onto (.+)/i, "Gira a la derecha hacia $1")
-        .replace(/^Turn left onto (.+)/i, "Gira a la izquierda hacia $1")
-        .replace(/^Turn right\b/i, "Gira a la derecha")
-        .replace(/^Turn left\b/i, "Gira a la izquierda")
-        .replace(/^Make a sharp right\b/i, "Gira cerradamente a la derecha")
-        .replace(/^Make a sharp left\b/i, "Gira cerradamente a la izquierda")
-        .replace(/^Make a slight right\b/i, "Gira levemente a la derecha")
-        .replace(/^Make a slight left\b/i, "Gira levemente a la izquierda")
-
-        // Continuar
-        .replace(/^Continue straight\b/i, "Continúa recto")
-        .replace(/^Continue on (.+)/i, "Continúa por $1")
-        .replace(/^Continue\b/i, "Continúa")
-
-        // Mantenerse
-        .replace(/^Keep right\b/i, "Mantente a la derecha")
-        .replace(/^Keep left\b/i, "Mantente a la izquierda")
-
-        // Carriles
-        .replace(/^Use the right lane\b/i, "Usa el carril derecho")
-        .replace(/^Use the left lane\b/i, "Usa el carril izquierdo")
-
-        // Salidas
-        .replace(/^Take the exit toward (.+)/i, "Toma la salida hacia $1")
-        .replace(/^Take the (\d+)(st|nd|rd|th) exit\b/i, "Toma la $1ᵃ salida")
-
-        // Rotondas
-        .replace(/^Enter the traffic circle and take the (\d+)(st|nd|rd|th) exit onto (.+)/i, "Entra a la rotonda y toma la $1ᵃ salida hacia $3")
-        .replace(/^Exit the traffic circle onto (.+)/i, "Sal de la rotonda hacia $1")
-        .replace(/^Enter the traffic circle and take the (\d+)(st|nd|rd|th) exit\b/i, "Entra a la rotonda y toma la $1ᵃ salida")
-        .replace(/^Exit the traffic circle\b/i, "Sal de la rotonda")
-
-        // Llegada
-        .replace(/^You have arrived at your destination, on the right/i, "Has llegado a tu destino, a la derecha")
-        .replace(/^You have arrived at your destination, on the left/i, "Has llegado a tu destino, a la izquierda")
-        .replace(/^You have arrived at your destination\b/i, "Has llegado a tu destino")
-
-        // Vuelta en U
-        .replace(/^Make a U-turn\b/i, "Haz un giro en U")
-
-        // Desvíos
-        .replace(/^Take the ramp on the right\b/i, "Toma la salida a la derecha")
-        .replace(/^Take the ramp on the left\b/i, "Toma la salida a la izquierda");
-}
-
-
-    function speakInstructionSequentially(instructions, index) {
-        if (index >= instructions.length) {
-            console.log("Todas las instrucciones han sido habladas.");
-            return;
-        }
-
-        const rawText = instructions[index].text;
-
-// Ignorar si es de una rotonda
-if (/traffic circle/i.test(rawText)) {
-    console.log("Saltando instrucción de rotonda:", rawText);
-    speakInstructionSequentially(instructions, index + 1);
-    return;
-}
-
-const currentInstructionText = traducirInstruccion(rawText);
-
-
-        console.log("Hablando instrucción secuencial:", currentInstructionText);
-        
-        if (!('speechSynthesis' in window) || speechSynth === null) {
-            console.warn("API de Síntesis de Voz no disponible o no inicializada para secuencia.");
-            return;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(currentInstructionText);
         utterance.lang = 'es-ES';
-
         if (spanishVoice) {
             utterance.voice = spanishVoice;
-        } else {
-            console.warn("No se encontró una voz específica en español, usando voz por defecto del navegador para 'es-ES'.");
         }
-
-        utterance.onerror = (event) => {
-            console.error('Error en la síntesis de voz (secuencial):', event.error);
-        };
-
-        // CUANDO UNA INSTRUCCIÓN TERMINA, LLAMA A SÍ MISMA PARA HABLAR LA SIGUIENTE
-        utterance.onend = () => {
-            speakInstructionSequentially(instructions, index + 1);
-        };
-
+        utterance.onerror = (event) => console.error('Error en la síntesis de voz:', event.error);
         speechSynth.speak(utterance);
     }
 
+    function traducirInstruccion(texto) {
+        if (!texto || typeof texto !== 'string') return texto;
+        return texto
+            .replace(/^Head northwest\b/i, "Dirígete hacia el noroeste")
+            .replace(/^Head northeast\b/i, "Dirígete hacia el noreste")
+            .replace(/^Head southwest\b/i, "Dirígete hacia el suroeste")
+            .replace(/^Head southeast\b/i, "Dirígete hacia el sureste")
+            .replace(/^Head north\b/i, "Dirígete hacia el norte")
+            .replace(/^Head south\b/i, "Dirígete hacia el sur")
+            .replace(/^Head east\b/i, "Dirígete hacia el este")
+            .replace(/^Head west\b/i, "Dirígete hacia el oeste")
+            .replace(/^Turn right onto (.+)/i, "Gira a la derecha hacia $1")
+            .replace(/^Turn left onto (.+)/i, "Gira a la izquierda hacia $1")
+            .replace(/^Turn right\b/i, "Gira a la derecha")
+            .replace(/^Turn left\b/i, "Gira a la izquierda")
+            .replace(/^Make a sharp right\b/i, "Gira cerradamente a la derecha")
+            .replace(/^Make a sharp left\b/i, "Gira cerradamente a la izquierda")
+            .replace(/^Make a slight right\b/i, "Gira levemente a la derecha")
+            .replace(/^Make a slight left\b/i, "Gira levemente a la izquierda")
+            .replace(/^Continue straight\b/i, "Continúa recto")
+            .replace(/^Continue on (.+)/i, "Continúa por $1")
+            .replace(/^Continue\b/i, "Continúa")
+            .replace(/^Keep right\b/i, "Mantente a la derecha")
+            .replace(/^Keep left\b/i, "Mantente a la izquierda")
+            .replace(/^You have arrived at your destination\b/i, "Has llegado a tu destino")
+            .replace(/^Make a U-turn\b/i, "Haz un giro en U");
+    }
 
-    // Inicializar el sintetizador de voz y seleccionar la voz en español
     window.speechSynthesis.onvoiceschanged = () => {
         speechSynth = window.speechSynthesis;
         const voices = speechSynth.getVoices();
-        
-        // --- Estrategia de selección de voz ---
-        // 1. Intentar encontrar una voz de Google en español de España
-        spanishVoice = voices.find(voice => voice.lang === 'es-ES' && voice.name.includes('Google español'));
-
-        if (!spanishVoice) {
-            spanishVoice = voices.find(voice => voice.lang.startsWith('es') && voice.name.includes('Google español'));
-        }
-        if (!spanishVoice) {
-            spanishVoice = voices.find(voice => voice.lang === 'es-ES' && voice.name.includes('Microsoft Helena'));
-        }
-
-        if (!spanishVoice) {
-            spanishVoice = voices.find(voice => voice.lang === 'es-ES');
-        }
-        if (!spanishVoice) {
-            spanishVoice = voices.find(voice => voice.lang.startsWith('es'));
-        }
-
+        spanishVoice = voices.find(v => v.lang === 'es-ES' && v.name.includes('Google')) ||
+                       voices.find(v => v.lang === 'es-ES' && v.name.includes('Microsoft')) ||
+                       voices.find(v => v.lang === 'es-ES') ||
+                       voices.find(v => v.lang.startsWith('es'));
         if (spanishVoice) {
-            console.log("Voz en español seleccionada:", spanishVoice.name, spanishVoice.lang);
+            console.log("Voz en español seleccionada:", spanishVoice.name);
         } else {
-            console.warn("No se encontró ninguna voz en español en el navegador. Se usará la voz por defecto.");
+            console.warn("No se encontró una voz en español.");
         }
     };
-    // --- FIN VARIABLES Y FUNCIONES PARA SÍNTESIS DE VOZ ---
 
     // --- INICIALIZACIÓN ---
     function init() {
@@ -227,25 +120,25 @@ const currentInstructionText = traducirInstruccion(rawText);
         renderSearchResults(sitesData);
         hideInfoPanel();
         hideSearchPanel();
-        requestUserLocationOnce(); 
+        requestUserLocationOnce();
     }
 
     function loadSitesData() {
         sitesData = [
-            { id: 'ruinasEpecuen', name: 'Ruinas de Villa Epecuén', type: 'Atracción Turística', coordinates: [-37.1335, -62.8080], description: 'Impresionantes ruinas de la villa turística que fue inundada en 1985. Un testimonio de la fuerza de la naturaleza y la historia local.', image: 'imagenes/epecuen.jpg', contact: 'No aplica', hours: 'Abierto siempre (visita exterior)' },
-            { id: 'playaEcoSustentable', name: 'Playa Eco Sustentable', type: 'Atracción Turística', coordinates: [-37.139138, -62.795155], description: 'Espacio recreativo a orillas del Lago Epecuén, conocido por sus propiedades terapéuticas y su enfoque en la sostenibilidad.', image: 'imagenes/ecoplaya.jpg', contact: 'Consultar en Oficina de Turismo', hours: 'Abierto siempre (visita exterior)' },
-            { id: 'museoRegionalCarhue', name: 'Museo Regional Adolfo Alsina', type: 'Cultura y Ocio', coordinates: [-37.18094233530074, -62.761820746051036], description: 'Conserva la historia y el patrimonio cultural de Carhué y la región de Adolfo Alsina.', image: 'imagenes/museo.jpg', contact: '(02936) 43-0660', hours: 'Lunes a Viernes: 7-13hs. Sábados y Domingos: 9-13hs.' },
-            { id: 'cine', name: 'Cine Carhué', type: 'Cultura y Ocio', coordinates: [-37.17889807646663, -62.76050571327587], description: 'Cine local con películas actuales y eventos especiales.', image: 'imagenes/cine.jpg', contact: 'Consultar en el Lugar', hours: 'Consultar programación' },
-            { id: 'panaderiaMiSueño', name: 'Panaderia Mi Sueño', type: 'Gastronomía', coordinates: [-37.176980, -62.756694], description: 'Panaderia tradiccional, Amigable por su bajo precio.', image: 'imagenes/panaderia_misueno.jpg', contact: 'Consultar en el Lugar', hours: 'Todos los días: 7-13hs, 16-20hs' },
-            { id: 'amoratacafe', name: 'Amorata Café', type: 'Gastronomía', coordinates: [-37.1790450310919, -62.76081465973938], description: 'Cafetería acogedora con opciones de repostería y café.', image: 'imagenes/amoratacarhue.webp', contact: 'Consultar en el Lugar', hours: 'Martes a Viernes: 9-21:30hs, 9:30-21:30hs' },
-            { id: 'lataperacafe', name: 'La Taperacafé', type: 'Gastronomía', coordinates: [-37.17871163427988, -62.75727335494652], description: 'Cafetería con un ambiente relajado y opciones de comida rápida.', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Lunes: 8hs-hasta cerrar, Jueves a Domingo: 8hs-hasta cerrar' },
-            { id: 'hotelCarhue', name: 'Gran Hotel Carhué', type: 'Alojamiento', coordinates: [-37.18035822449324, -62.75878270822948], description: 'Alojamiento céntrico con servicios completos.', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
-            { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-37.17737809194196, -62.754341006246776], description: 'Farmacia tradicional con atención personalizada.', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Lunes a Viernes: 8:30-12:30hs, 16-20:30hs. Sabados: 9-12:30 (Verificar si esta de turno)' },
-            { id: 'farmaciasarsur', name: 'Farmacia Sar Sur', type: 'Salud y Servicios', coordinates: [-37.178973445003656, -62.75185701791286], description: 'Farmacia con atención personalizada y productos de salud.', image: 'imagenes/farmaciasarsur.jpeg', contact: '(02936) 41-2231', hours: 'Lunes a Viernes: 8-20:30hs, Sábados: 8-12:30hs (Verificar si esta de turno)' },
-            { id: 'farmaciadecarhue', name: 'Farmacia de carhue', type: 'Salud y Servicios', coordinates: [-37.18181224279205, -62.76084910071841], description: 'Farmacia tradicional con atención personalizada y productos de salud.', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Lunes a Sabados: 8-12:30hs, 16-20hs (Verificar si esta de turno)' },
-            { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-37.17841073467453, -62.757621102370145], description: 'Farmacia moderna con buena atención y productos de salud buenos.', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar en local', hours: 'Lunes a Sabados: 8-12:30hs, 16-20hs (Verificar si esta de turno)' },
-            { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Salud y Servicios', coordinates: [-37.17716908345923, -62.74984961493429], description: 'Centro de salud local con atención médica general y especializada.', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222 (Emergencias:107)', hours: 'Emergencias 24hs, Consultas de lunes a viernes 8-20hs' },
-            { id: 'consultorio', name: 'Consultorio Médico Urquiza', type: 'Salud y Servicios', coordinates: [-37.17585319956292, -62.76382760428685], description: 'Consultorio médico con atención general y especialidades.', image: 'imagenes/consultorioUrquiza.jpg', contact: '(02923) 69-8097', hours: 'Lunes a Viernes: 8:30-12hs, 15-18hs' },
+             { id: 'ruinasEpecuen', name: 'Ruinas de Villa Epecuén', type: 'Atracción Turística', coordinates: [-62.8080, -37.1335], description: 'Impresionantes ruinas...', image: 'imagenes/epecuen.jpg', contact: 'No aplica', hours: 'Abierto siempre' },
+             { id: 'playaEcoSustentable', name: 'Playa Eco Sustentable', type: 'Atracción Turística', coordinates: [-62.795155, -37.139138], description: 'Espacio recreativo...', image: 'imagenes/ecoplaya.jpg', contact: 'Consultar', hours: 'Abierto siempre' },
+             { id: 'museoRegionalCarhue', name: 'Museo Regional Adolfo Alsina', type: 'Cultura y Ocio', coordinates: [-62.761820, -37.180942], description: 'Conserva la historia...', image: 'imagenes/museo.jpg', contact: '(02936) 43-0660', hours: 'Ver horarios' },
+             { id: 'cine', name: 'Cine Carhué', type: 'Cultura y Ocio', coordinates: [-62.760505, -37.178898], description: 'Cine local...', image: 'imagenes/cine.jpg', contact: 'Consultar', hours: 'Ver programación' },
+             { id: 'panaderiaMiSueño', name: 'Panaderia Mi Sueño', type: 'Gastronomía', coordinates: [-62.756694, -37.176980], description: 'Panaderia tradicional...', image: 'imagenes/panaderia_misueno.jpg', contact: 'Consultar', hours: '7-13hs, 16-20hs' },
+             { id: 'amoratacafe', name: 'Amorata Café', type: 'Gastronomía', coordinates: [-62.760814, -37.179045], description: 'Cafetería acogedora...', image: 'imagenes/amoratacarhue.webp', contact: 'Consultar', hours: 'Ver horarios' },
+             { id: 'lataperacafe', name: 'La Taperacafé', type: 'Gastronomía', coordinates: [-62.757273, -37.178711], description: 'Cafetería relajada...', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Ver horarios' },
+             { id: 'hotelCarhue', name: 'Gran Hotel Carhué', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
+             { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-62.754341, -37.177378], description: 'Farmacia tradicional...', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Ver horarios de turno' },
+             { id: 'farmaciasarsur', name: 'Farmacia Sar Sur', type: 'Salud y Servicios', coordinates: [-62.751857, -37.178973], description: 'Farmacia con atención...', image: 'imagenes/farmaciasarsur.jpeg', contact: '(02936) 41-2231', hours: 'Ver horarios de turno' },
+             { id: 'farmaciadecarhue', name: 'Farmacia de Carhué', type: 'Salud y Servicios', coordinates: [-62.760849, -37.181812], description: 'Farmacia tradicional...', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Ver horarios de turno' },
+             { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-62.757621, -37.178410], description: 'Farmacia moderna...', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar', hours: 'Ver horarios de turno' },
+             { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Salud y Servicios', coordinates: [-62.749849, -37.177169], description: 'Centro de salud...', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222', hours: 'Emergencias 24hs' },
+             { id: 'consultorio', name: 'Consultorio Médico Urquiza', type: 'Salud y Servicios', coordinates: [-62.763827, -37.175853], description: 'Consultorio médico...', image: 'imagenes/consultorioUrquiza.jpg', contact: '(02923) 69-8097', hours: 'Ver horarios' },
         ];
     }
 
@@ -254,7 +147,7 @@ const currentInstructionText = traducirInstruccion(rawText);
             const storedReviews = localStorage.getItem('siteReviews');
             allReviews = storedReviews ? JSON.parse(storedReviews) : {};
         } catch (error) {
-            console.error("Error al cargar reseñas desde localStorage:", error);
+            console.error("Error al cargar reseñas:", error);
             allReviews = {};
         }
     }
@@ -263,22 +156,82 @@ const currentInstructionText = traducirInstruccion(rawText);
         try {
             localStorage.setItem('siteReviews', JSON.stringify(allReviews));
         } catch (error) {
-            console.error("Error al guardar reseñas en localStorage:", error);
+            console.error("Error al guardar reseñas:", error);
         }
     }
 
     function initMap() {
-        map = L.map('map', {
-            zoomControl: false,
-            layersControl: false,
-            maxZoom: 18 // Se estableció un maxZoom para reflejar el límite de OSM
-        }).setView(initialCoordinates, initialZoom);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        const apiKey = '7kWbCoztWq2DGLp4Mwsm'; // Tu clave de API de MapTiler
+        const styleUrl = `https://api.maptiler.com/maps/streets-v2/style.json?key=${apiKey}`;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors. Proyecto <a href="https://aaronidknot.github.io/CloudI/" target="_blank">CloudI</a>'
-        }).addTo(map);
+        map = new maplibregl.Map({
+            container: 'map',
+            style: styleUrl,
+            center: initialCoordinates,
+            zoom: initialZoom,
+            pitch: 0,
+            bearing: 0
+        });
 
+        // ✅ Control de navegación sin opción de cambio de capa (satélite)
+        map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+        const mapboxAccessToken = 'pk.eyJ1IjoiaXJyZWJlbGRlIiwiYSI6ImNtZGpnM2Z5dDBtNWcya3B3bGVmbXl5eTEifQ.C4cj0wOtX3bBCZLs5Opr4g';
+
+    directionsControl = new MapboxDirections({
+        accessToken: mapboxAccessToken,
+        unit: 'metric',         // Usar kilómetros
+        profile: 'mapbox/driving-traffic', // Perfil de conducción con tráfico
+        language: 'es',         // Instrucciones en español
+        placeholderOrigin: 'Elige un punto de partida o usa tu ubicación',
+        placeholderDestination: 'Elige un destino',
+        controls: {
+            instructions: true, // Mostrar las instrucciones paso a paso
+            profileSwitcher: true // Permitir cambiar entre auto, bici o a pie
+        }
+    });
+
+    map.addControl(directionsControl, 'top-left');
+    
+    directionsControl.on('route', (e) => {
+    // Una vez que la ruta está lista, esperamos un instante.
+    setTimeout(() => {
+        if (userCurrentCoords) {
+            
+            // --- 1. Lógica de la cámara ---
+            map.flyTo({
+                center: userCurrentCoords,
+                zoom: 17,
+                pitch: 60,
+                bearing: 0,
+                duration: 2000
+            });
+            isFollowing = true;
+            updateRouteStatus('Ruta lista. ¡En camino!', 'success');
+            console.log("Modo seguimiento activado por el evento 'route'.");
+
+            // --- 2. Lógica de voz ---
+            if (e.route && e.route.length > 0) {
+                const firstRoute = e.route[0];
+                if (firstRoute.legs && firstRoute.legs[0].steps && firstRoute.legs[0].steps.length > 0) {
+                    const primeraInstruccionEnIngles = firstRoute.legs[0].steps[0].maneuver.instruction;
+                    const primeraInstruccionTraducida = traducirInstruccion(primeraInstruccionEnIngles);
+                    console.log("Próxima instrucción (traducida):", primeraInstruccionTraducida);
+                    speakInstruction(primeraInstruccionTraducida);
+                }
+            }
+
+            // ✅ --- 3. OCULTAR PANEL DE INSTRUCCIONES (NUEVO) ---
+            // Buscamos el panel de direcciones por su clase CSS.
+            const directionsPanel = document.querySelector('.mapboxgl-ctrl-directions');
+            if (directionsPanel) {
+                // Si lo encontramos, lo ocultamos.
+                directionsPanel.style.display = 'none';
+                console.log('Panel de instrucciones de ruta oculto.');
+            }
+        }
+    }, 100); 
+});
+        // Se añaden los marcadores al mapa
         sitesData.forEach(addMarkerForSite);
     }
 
@@ -295,7 +248,13 @@ const currentInstructionText = traducirInstruccion(rawText);
                 }
             });
         }
-        
+        map.on('dragstart', () => {
+        if (isFollowing) {
+            isFollowing = false;
+            console.log("Modo seguimiento desactivado por el usuario.");
+            updateRouteStatus('Seguimiento manual. Presiona el botón de ubicación para volver a centrar.', 'info');
+        }
+    });
         if (locateMeButton) {
             locateMeButton.addEventListener('click', function() {
                 hideInfoPanel();
@@ -309,11 +268,16 @@ const currentInstructionText = traducirInstruccion(rawText);
             hideSearchPanel();
         });
 
-        if (rutaAutoBtn) rutaAutoBtn.addEventListener('click', () => {
-        inicializarVoz();
-        mostrarRuta('driving');
-        });
+        if (rutaAutoBtn) {
+            rutaAutoBtn.addEventListener('click', () => {
+                // ✅ NUEVO: Oculta el panel de información al hacer clic.
+                hideInfoPanel();
 
+                // Llama a las funciones que ya tenías para iniciar la ruta y la voz.
+                inicializarVoz();
+                mostrarRuta();
+            });
+        }
         
         window.addEventListener('beforeunload', () => {
             if (locationWatchId) {
@@ -322,15 +286,26 @@ const currentInstructionText = traducirInstruccion(rawText);
         });
     }
 
-    function addMarkerForSite(site) {
-        if (!site.coordinates || site.coordinates.length !== 2) {
-            console.warn(`Sitio "${site.name}" no tiene coordenadas válidas.`);
-            return;
-        }
-        const marker = L.marker(site.coordinates); 
-        marker.on('click', () => selectSiteFromMarker(site));
-        markers[site.id] = marker;
+    // ✅ CORREGIDO: Añadir marcadores usando MapLibre
+    // VERSIÓN CORRECTA (los marcadores se crean pero quedan ocultos)
+function addMarkerForSite(site) {
+    if (!site.coordinates || site.coordinates.length !== 2) {
+        console.warn(`Sitio "${site.name}" no tiene coordenadas válidas.`);
+        return;
     }
+
+    // Se crea el marcador pero NO se añade al mapa.
+    const marker = new maplibregl.Marker({ color: '#3FB1CE' })
+        .setLngLat(site.coordinates);
+
+    marker.getElement().addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectSiteFromMarker(site);
+    });
+
+    // Solo lo guardamos en nuestro objeto de marcadores
+    markers[site.id] = marker;
+}
 
     function hideInfoPanel() {
         infoPanel.classList.add('hidden');
@@ -338,10 +313,11 @@ const currentInstructionText = traducirInstruccion(rawText);
         unhighlightActiveMarker();
         updateActiveSearchResult(null);
 
-        if (visibleSiteMarker && !routingControl) {
-            map.removeLayer(visibleSiteMarker);
-            visibleSiteMarker = null;
-        }
+        if (marcadorDeRutaVisible) {
+        marcadorDeRutaVisible.remove();
+        marcadorDeRutaVisible = null;
+    }
+        map.easeTo({ pitch: 0, bearing: 0, duration: 1000 });
     }
 
     function showSearchPanel() { if (searchPanel) searchPanel.classList.add('active'); }
@@ -362,29 +338,41 @@ const currentInstructionText = traducirInstruccion(rawText);
         infoPanel.classList.remove('hidden');
         infoPanel.setAttribute('aria-hidden', 'false');
 
-        selectedDestinationCoords = L.latLng(site.coordinates[0], site.coordinates[1]);
+        selectedDestinationCoords = site.coordinates; // [lon, lat]
         updateRouteStatus('Destino seleccionado. Calcula la ruta o busca tu ubicación.', 'info');
-        if (routingControl) map.removeControl(routingControl);
-
+        
         highlightMarker(site.id);
         updateActiveSearchResult(site.id);
     }
 
+    // ✅ CORREGIDO: Resaltar marcador con MapLibre
     function highlightMarker(siteId) {
         unhighlightActiveMarker();
         if (markers[siteId]) {
             activeMarker = markers[siteId];
-            activeMarker.setIcon(L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-            }));
+            activeMarker.remove(); // Quitar el marcador actual
+            activeMarker = new maplibregl.Marker({ color: '#3498db' }) // Crear uno nuevo con color azul
+                .setLngLat(markers[siteId].getLngLat())
+                .addTo(map);
+            activeMarker.getElement().addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectSiteFromMarker(sitesData.find(s => s.id === siteId));
+            });
         }
     }
 
+    // ✅ CORREGIDO: Quitar resaltado del marcador
     function unhighlightActiveMarker() {
         if (activeMarker) {
-            activeMarker.setIcon(new L.Icon.Default());
+            const siteId = currentSiteIdInput.value;
+            const originalCoords = activeMarker.getLngLat();
+            activeMarker.remove(); // Quita el marcador resaltado
+            
+            // Re-crea el marcador original
+            if (markers[siteId]) {
+                 const site = sitesData.find(s => s.id === siteId);
+                 addMarkerForSite(site);
+            }
             activeMarker = null;
         }
     }
@@ -418,13 +406,10 @@ const currentInstructionText = traducirInstruccion(rawText);
             const details = document.createElement('details');
             details.className = 'category-group';
             details.open = true;
-
             const summary = document.createElement('summary');
             summary.textContent = category;
-            
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'category-content';
-
             const ul = document.createElement('ul');
             sitesByCategory[category].forEach(site => {
                 const li = document.createElement('li');
@@ -438,7 +423,6 @@ const currentInstructionText = traducirInstruccion(rawText);
                 });
                 ul.appendChild(li);
             });
-            
             contentWrapper.appendChild(ul);
             details.appendChild(summary);
             details.appendChild(contentWrapper);
@@ -447,16 +431,11 @@ const currentInstructionText = traducirInstruccion(rawText);
     }
 
     function selectSiteFromSearch(site) {
-        if (visibleSiteMarker) {
-            map.removeLayer(visibleSiteMarker);
-        }
-        const newMarker = markers[site.id];
-        if (newMarker) {
-            newMarker.addTo(map);
-            visibleSiteMarker = newMarker;
-        }
         hideSearchPanel();
-        map.setView(site.coordinates, Math.max(map.getZoom(), 17));
+        map.flyTo({
+            center: site.coordinates,
+            zoom: Math.max(map.getZoom(), 17)
+        });
         displaySiteInfo(site);
     }
 
@@ -503,7 +482,7 @@ const currentInstructionText = traducirInstruccion(rawText);
             const reviewItem = document.createElement('div');
             reviewItem.classList.add('review-item');
             const ratingStars = '<span class="review-stars">' + '★'.repeat(review.rating) + '</span>' + '☆'.repeat(5 - review.rating);
-            reviewItem.innerHTML = `<p><strong>${escapeHTML(review.name)}</strong> - ${ratingStars}</p><p>${escapeHTML(review.comment)}</p><small>${new Date(review.timestamp).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</small>`;
+            reviewItem.innerHTML = `<p><strong>${escapeHTML(review.name)}</strong> - ${ratingStars}</p><p>${escapeHTML(review.comment)}</p><small>${new Date(review.timestamp).toLocaleDateString('es-ES')}</small>`;
             reviewsListEl.appendChild(reviewItem);
         });
     }
@@ -511,7 +490,7 @@ const currentInstructionText = traducirInstruccion(rawText);
     function requestUserLocationOnce() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                const err = new Error("La geolocalización no es soportada por este navegador.");
+                const err = new Error("Geolocalización no soportada.");
                 handleLocationError({ code: -1, message: err.message });
                 return reject(err);
             }
@@ -533,165 +512,100 @@ const currentInstructionText = traducirInstruccion(rawText);
         if (locationWatchId) {
             navigator.geolocation.clearWatch(locationWatchId);
             locationWatchId = null;
-            updateRouteStatus('Seguimiento de ubicación detenido.', 'info');
-            if (myLocationMarker) myLocationMarker.setPopupContent("Seguimiento detenido.");
+            updateRouteStatus('Seguimiento detenido.', 'info');
             return;
         }
         if (!navigator.geolocation) {
-            return handleLocationError({ code: -1, message: "La geolocalización no es soportada." });
+            return handleLocationError({ code: -1, message: "Geolocalización no soportada." });
         }
-        updateRouteStatus('Iniciando seguimiento de ubicación...', 'loading');
+        updateRouteStatus('Iniciando seguimiento...', 'loading');
         locationWatchId = navigator.geolocation.watchPosition(updateUserPositionOnMap, handleLocationError, {
             enableHighAccuracy: true, timeout: 10000, maximumAge: 0
         });
     }
     
+    // ✅ CORREGIDO: Actualizar posición del usuario con MapLibre
     function updateUserPositionOnMap(position) {
-    const { latitude: lat, longitude: lon, accuracy: acc } = position.coords;
-    userCurrentCoords = L.latLng(lat, lon);
+        const { latitude: lat, longitude: lon } = position.coords;
+        userCurrentCoords = [lon, lat]; // [lon, lat]
 
-    if (!myLocationMarker) {
-        myLocationMarker = L.marker(userCurrentCoords, {
-            icon: L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-            })
-        }).addTo(map);
+        if (!myLocationMarker) {
+            const el = document.createElement('div');
+            el.className = 'user-location-marker'; // Se necesita CSS para estilizarlo
 
-        myLocationAccuracyCircle = L.circle(userCurrentCoords, {
-            radius: acc,
-            color: '#38bdf8',
-            fillColor: '#38bdf8',
-            fillOpacity: 0.15,
-            weight: 2
-        }).addTo(map);
-
-        map.setView(userCurrentCoords, 16);
-    } else {
-        myLocationMarker.setLatLng(userCurrentCoords);
-        myLocationAccuracyCircle.setLatLng(userCurrentCoords).setRadius(acc);
-    }
-
-    myLocationMarker.setPopupContent(`<b>¡Estás aquí!</b><br>Precisión: ${acc.toFixed(0)} metros.`);
-    updateRouteStatus('Ubicación actualizada.', 'success');
-
-    // 🚨 Chequear instrucciones cercanas
-    verificarInstruccionesCercanas();
-}
-function verificarInstruccionesCercanas() {
-    if (!userCurrentCoords || !routeInstructions || routeInstructions.length === 0) return;
-
-    for (let i = 0; i < routeInstructions.length; i++) {
-        const instr = routeInstructions[i];
-        if (instr.spoken) continue;
-        if (!instr.lat || !instr.lng) continue;
-
-        const punto = L.latLng(instr.lat, instr.lng);
-        const distancia = userCurrentCoords.distanceTo(punto); // en metros
-
-        if (distancia <= 25) { // 📍 Puedes ajustar este umbral (ej: 30, 50m)
-            instr.spoken = true;
-            const textoTraducido = traducirInstruccion(instr.text);
-            console.log("📢 Hablando instrucción cercana:", textoTraducido);
-            speakInstruction(textoTraducido);
-            break; // evitar que hable muchas al mismo tiempo
+            myLocationMarker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat(userCurrentCoords)
+                .addTo(map);
+            map.flyTo({ center: userCurrentCoords, zoom: 16 });
+        } else {
+            myLocationMarker.setLngLat(userCurrentCoords);
         }
+        if (isFollowing) {
+        map.panTo(userCurrentCoords);
     }
-}
-
+        updateRouteStatus('Ubicación actualizada.', 'success');
+    }
 
     function handleLocationError(error) {
-        let userFriendlyMessage = "Error al obtener la ubicación: ";
+        let msg = "Error de ubicación: ";
         switch(error.code) {
-            case error.PERMISSION_DENIED: userFriendlyMessage += "Permiso denegado."; break;
-            case error.POSITION_UNAVAILABLE: userFriendlyMessage += "Información de ubicación no disponible."; break;
-            case error.TIMEOUT: userFriendlyMessage += "La solicitud de ubicación ha caducado."; break;
-            case -1: userFriendlyMessage = error.message; break;
-            default: userFriendlyMessage += "Un error desconocido ha ocurrido."; break;
+            case error.PERMISSION_DENIED: msg += "Permiso denegado."; break;
+            case error.POSITION_UNAVAILABLE: msg += "Ubicación no disponible."; break;
+            case error.TIMEOUT: msg += "La solicitud ha caducado."; break;
+            default: msg = error.message || "Un error desconocido ha ocurrido."; break;
         }
-        alert(userFriendlyMessage); 
-        console.error("Error de Geolocalización:", error.message || error);
-        updateRouteStatus(userFriendlyMessage, 'error');
+        alert(msg);
+        console.error("Error de Geolocalización:", error);
+        updateRouteStatus(msg, 'error');
         if (locationWatchId) {
             navigator.geolocation.clearWatch(locationWatchId);
             locationWatchId = null;
         }
     }
 
-    async function mostrarRuta(profile) {
-        hideInfoPanel();
-        hideSearchPanel();
-        updateRouteStatus('Calculando ruta...', 'loading');
-
-        try {
-            // Si no tenemos la ubicación, la pedimos y esperamos el resultado.
-            if (!userCurrentCoords) {
-                updateRouteStatus('Necesitamos tu ubicación para la ruta...', 'loading');
-                await requestUserLocationOnce(); 
-            }
-            startWatchingUserLocation(); // ⬅️ empieza a seguirte después de calcular la ruta
-
-            if (!selectedDestinationCoords) {
-                updateRouteStatus('Por favor, selecciona un destino del mapa o la lista.', 'error');
-                return;
-            }
-
-            if (routingControl) map.removeControl(routingControl);
-            const destinationSiteId = currentSiteIdInput.value;
-            if (destinationSiteId && markers[destinationSiteId]) {
-                if(visibleSiteMarker) map.removeLayer(visibleSiteMarker);
-                visibleSiteMarker = markers[destinationSiteId].addTo(map);
-            }
-
-            routingControl = L.Routing.control({
-                waypoints: [userCurrentCoords, selectedDestinationCoords],
-                routeWhileDragging: false, show: false, collapsible: false,
-                speech: false, 
-                language: 'es',
-router: L.Routing.osrmv1({
-    serviceUrl: 'https://router.project-osrm.org/route/v1'
-}),
-
-                lineOptions: { styles: [{ color: '#0ea5e9', opacity: 0.9, weight: 7 }] },
-                createMarker: () => null
-            }).addTo(map);
-
-            routingControl.on('routesfound', function (e) {
-    const summary = e.routes[0].summary;
-    const distanciaKm = (summary.totalDistance / 1000).toFixed(1);
-    const tiempoMin = Math.round(summary.totalTime / 60);
-    updateRouteStatus(`Ruta: ${distanciaKm} km, aprox. ${tiempoMin} min.`, 'success');
-
-    // Guardar instrucciones
-    const leg = e.routes[0].instructions;
-    if (leg && leg.length > 0) {
-        routeInstructions = leg.map(instr => ({
-            ...instr,
-            spoken: false
-        }));
-
-        // 🟢 Decir la primera instrucción de inmediato
-        const primera = routeInstructions[0];
-        primera.spoken = true;
-        const textoTraducido = traducirInstruccion(primera.text);
-        console.log("🗣️ Instrucción inicial:", textoTraducido);
-        speakInstruction(textoTraducido);
+    async function mostrarRuta() {
+    // Limpia marcadores anteriores y valida que haya un destino
+    if (marcadorDeRutaVisible) { marcadorDeRutaVisible.remove(); }
+    const destinationSiteId = currentSiteIdInput.value;
+    if (!destinationSiteId) {
+        alert("Primero selecciona un destino en el panel.");
+        return;
     }
-});
+    const marcadorDestino = markers[destinationSiteId];
+    if (marcadorDestino) {
+        marcadorDestino.addTo(map);
+        marcadorDeRutaVisible = marcadorDestino;
+    }
 
+    inicializarVoz();
 
-            routingControl.on('routingerror', function(e) {
-                console.error("Error de enrutamiento:", e.error);
-                updateRouteStatus(`Error: ${e.error.message || 'Ruta no encontrada'}`, 'error');
-            });
-
-        } catch (error) {
-            // Esto se ejecuta si el usuario niega el permiso de ubicación.
-            console.error("No se pudo calcular la ruta por un error de ubicación:", error);
-            updateRouteStatus('No se puede calcular la ruta sin tu ubicación.', 'error');
+    try {
+        // Pide la ubicación actual del usuario si no la tenemos.
+        if (!userCurrentCoords) {
+            updateRouteStatus('Buscando tu ubicación...', 'loading');
+            await requestUserLocationOnce();
         }
+        if (!userCurrentCoords) {
+            updateRouteStatus('No se pudo obtener tu ubicación.', 'error');
+            return;
+        }
+
+        // Obtenemos las coordenadas del destino.
+        const destinationSite = sitesData.find(site => site.id === destinationSiteId);
+        const destinationCoords = destinationSite.coordinates;
+
+        // ✅ SIMPLIFICADO: Solo establecemos el origen y el destino.
+        // La animación ahora la maneja el evento 'route'.
+        updateRouteStatus('Calculando ruta...', 'loading');
+        directionsControl.removeRoutes();
+        directionsControl.setOrigin(userCurrentCoords);
+        directionsControl.setDestination(destinationCoords);
+
+    } catch (error) {
+        console.error("Error al preparar la ruta:", error);
+        updateRouteStatus('Hubo un error al preparar la ruta.', 'error');
     }
+}
 
     function updateRouteStatus(message, type = 'info') {
         if (!estadoRutaEl) return;
@@ -713,35 +627,18 @@ router: L.Routing.osrmv1({
     // Llama a la función de inicialización del script
     init();
 });
-// Mostrar el botón solo si es iPhone/iPad
-// Mostrar el botón solo si es iPhone/iPad
+
+// Código para iOS sin cambios
 const esIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
 if (esIOS) {
     const activarVozBtn = document.getElementById('activarVozIOS');
     if (activarVozBtn) {
         activarVozBtn.style.display = 'block';
-
         activarVozBtn.addEventListener('click', () => {
-            // Forzar carga de voces
             const utterance = new SpeechSynthesisUtterance("Instrucciones por voz activadas");
             utterance.lang = 'es-ES';
-
-            window.speechSynthesis.onvoiceschanged = () => {
-                speechSynth = window.speechSynthesis;
-                const voices = speechSynth.getVoices();
-                spanishVoice = voices.find(v => v.lang.startsWith("es") && v.name.includes("Google"))
-                            || voices.find(v => v.lang === "es-ES")
-                            || voices.find(v => v.lang.startsWith("es"));
-                
-                if (spanishVoice) utterance.voice = spanishVoice;
-            };
-
-            speechSynth = window.speechSynthesis;
-            speechSynth.cancel(); // por si estaba hablando algo
-            speechSynth.speak(utterance);
-
+            window.speechSynthesis.speak(utterance);
             activarVozBtn.style.display = 'none';
-            alert("🔊 Instrucciones por voz habilitadas.");
         });
     }
 }

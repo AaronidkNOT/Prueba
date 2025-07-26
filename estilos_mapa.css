@@ -12,7 +12,7 @@
     --border-color: #4A4E5A;
     --panel-width-left: clamp(280px, 25%, 350px);
     --panel-width-right: clamp(320px, 30%, 400px);
-    --danger-color: #ef4444; /* Rojo para errores/alertas */
+    --danger-color: #ef4444; /* Rojo para errores/aletas */
     --success-color: #22c55e; /* Verde para éxito */
     --font-family-main: 'Poppins', sans-serif;
     --border-radius-small: 4px;
@@ -99,7 +99,7 @@ body, html {
     padding: 8px;
     color: var(--primary-accent); /* <-- ESTO HACE LA LUPA AZUL */
 }
-#toggle-search-btn:hover { 
+#toggle-search-btn:hover {
     background-color: var(--primary-accent); /* <-- Al pasar el mouse, el fondo se hace azul... */
     color: var(--text-light); /* <-- ...y el icono se vuelve blanco para mejor contraste */
 }
@@ -449,9 +449,7 @@ body, html {
     padding: 5px 0 5px 15px; /* Padding interior para los items */
     margin: 0;
 }
-.leaflet-routing-container {
-    display: none !important;
-}
-.leaflet-control-layers {
+/* Oculta el panel de control de Mapbox Directions */
+.mapboxgl-ctrl-directions {
     display: none !important;
 }
