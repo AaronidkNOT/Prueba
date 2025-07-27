@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', function () {
         speechSynth = window.speechSynthesis;
         const voices = speechSynth.getVoices();
         spanishVoice = voices.find(v => v.lang === 'es-ES' && v.name.includes('Google')) ||
-                       voices.find(v => v.lang === 'es-ES' && v.name.includes('Microsoft')) ||
-                       voices.find(v => v.lang === 'es-ES') ||
-                       voices.find(v => v.lang.startsWith('es'));
+                        voices.find(v => v.lang === 'es-ES' && v.name.includes('Microsoft')) ||
+                        voices.find(v => v.lang === 'es-ES') ||
+                        voices.find(v => v.lang.startsWith('es'));
         if (spanishVoice) {
             console.log("Voz en español seleccionada:", spanishVoice.name);
         } else {
@@ -125,20 +125,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function loadSitesData() {
         sitesData = [
-             { id: 'ruinasEpecuen', name: 'Ruinas de Villa Epecuén', type: 'Atracción Turística', coordinates: [-62.8080, -37.1335], description: 'Impresionantes ruinas...', image: 'imagenes/epecuen.jpg', contact: 'No aplica', hours: 'Abierto siempre' },
-             { id: 'playaEcoSustentable', name: 'Playa Eco Sustentable', type: 'Atracción Turística', coordinates: [-62.795155, -37.139138], description: 'Espacio recreativo...', image: 'imagenes/ecoplaya.jpg', contact: 'Consultar', hours: 'Abierto siempre' },
-             { id: 'museoRegionalCarhue', name: 'Museo Regional Adolfo Alsina', type: 'Cultura y Ocio', coordinates: [-62.761820, -37.180942], description: 'Conserva la historia...', image: 'imagenes/museo.jpg', contact: '(02936) 43-0660', hours: 'Ver horarios' },
-             { id: 'cine', name: 'Cine Carhué', type: 'Cultura y Ocio', coordinates: [-62.760505, -37.178898], description: 'Cine local...', image: 'imagenes/cine.jpg', contact: 'Consultar', hours: 'Ver programación' },
-             { id: 'panaderiaMiSueño', name: 'Panaderia Mi Sueño', type: 'Gastronomía', coordinates: [-62.756694, -37.176980], description: 'Panaderia tradicional...', image: 'imagenes/panaderia_misueno.jpg', contact: 'Consultar', hours: '7-13hs, 16-20hs' },
-             { id: 'amoratacafe', name: 'Amorata Café', type: 'Gastronomía', coordinates: [-62.760814, -37.179045], description: 'Cafetería acogedora...', image: 'imagenes/amoratacarhue.webp', contact: 'Consultar', hours: 'Ver horarios' },
-             { id: 'lataperacafe', name: 'La Taperacafé', type: 'Gastronomía', coordinates: [-62.757273, -37.178711], description: 'Cafetería relajada...', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Ver horarios' },
-             { id: 'hotelCarhue', name: 'Gran Hotel Carhué', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
-             { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-62.754341, -37.177378], description: 'Farmacia tradicional...', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Ver horarios de turno' },
-             { id: 'farmaciasarsur', name: 'Farmacia Sar Sur', type: 'Salud y Servicios', coordinates: [-62.751857, -37.178973], description: 'Farmacia con atención...', image: 'imagenes/farmaciasarsur.jpeg', contact: '(02936) 41-2231', hours: 'Ver horarios de turno' },
-             { id: 'farmaciadecarhue', name: 'Farmacia de Carhué', type: 'Salud y Servicios', coordinates: [-62.760849, -37.181812], description: 'Farmacia tradicional...', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Ver horarios de turno' },
-             { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-62.757621, -37.178410], description: 'Farmacia moderna...', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar', hours: 'Ver horarios de turno' },
-             { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Salud y Servicios', coordinates: [-62.749849, -37.177169], description: 'Centro de salud...', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222', hours: 'Emergencias 24hs' },
-             { id: 'consultorio', name: 'Consultorio Médico Urquiza', type: 'Salud y Servicios', coordinates: [-62.763827, -37.175853], description: 'Consultorio médico...', image: 'imagenes/consultorioUrquiza.jpg', contact: '(02923) 69-8097', hours: 'Ver horarios' },
+                { id: 'ruinasEpecuen', name: 'Ruinas de Villa Epecuén', type: 'Atracción Turística', coordinates: [-62.8080, -37.1335], description: 'Impresionantes ruinas...', image: 'imagenes/epecuen.jpg', contact: 'No aplica', hours: 'Abierto siempre' },
+                { id: 'playaEcoSustentable', name: 'Playa Eco Sustentable', type: 'Atracción Turística', coordinates: [-62.795155, -37.139138], description: 'Espacio recreativo...', image: 'imagenes/ecoplaya.jpg', contact: 'Consultar', hours: 'Abierto siempre' },
+                { id: 'museoRegionalCarhue', name: 'Museo Regional Adolfo Alsina', type: 'Cultura y Ocio', coordinates: [-62.761820, -37.180942], description: 'Conserva la historia...', image: 'imagenes/museo.jpg', contact: '(02936) 43-0660', hours: 'Ver horarios' },
+                { id: 'cine', name: 'Cine Carhué', type: 'Cultura y Ocio', coordinates: [-62.760505, -37.178898], description: 'Cine local...', image: 'imagenes/cine.jpg', contact: 'Consultar', hours: 'Ver programación' },
+                { id: 'panaderiaMiSueño', name: 'Panaderia Mi Sueño', type: 'Gastronomía', coordinates: [-62.756694, -37.176980], description: 'Panaderia tradicional...', image: 'imagenes/panaderia_misueno.jpg', contact: 'Consultar', hours: '7-13hs, 16-20hs' },
+                { id: 'amoratacafe', name: 'Amorata Café', type: 'Gastronomía', coordinates: [-62.760814, -37.179045], description: 'Cafetería acogedora...', image: 'imagenes/amoratacarhue.webp', contact: 'Consultar', hours: 'Ver horarios' },
+                { id: 'lataperacafe', name: 'La Taperacafé', type: 'Gastronomía', coordinates: [-62.757273, -37.178711], description: 'Cafetería relajada...', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Ver horarios' },
+                { id: 'hotelCarhue', name: 'Gran Hotel Carhué', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
+                { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-62.754341, -37.177378], description: 'Farmacia tradicional...', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Ver horarios de turno' },
+                { id: 'farmaciasarsur', name: 'Farmacia Sar Sur', type: 'Salud y Servicios', coordinates: [-62.751857, -37.178973], description: 'Farmacia con atención...', image: 'imagenes/farmaciasarsur.jpeg', contact: '(02936) 41-2231', hours: 'Ver horarios de turno' },
+                { id: 'farmaciadecarhue', name: 'Farmacia de Carhué', type: 'Salud y Servicios', coordinates: [-62.760849, -37.181812], description: 'Farmacia tradicional...', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Ver horarios de turno' },
+                { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-62.757621, -37.178410], description: 'Farmacia moderna...', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar', hours: 'Ver horarios de turno' },
+                { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Salud y Servicios', coordinates: [-62.749849, -37.177169], description: 'Centro de salud...', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222 & 107 (EMERGENCIAS)', hours: 'Emergencias 24hs' },
         ];
     }
 
@@ -285,6 +284,42 @@ directionsControl = new MapboxDirections({
                 navigator.geolocation.clearWatch(locationWatchId);
             }
         });
+
+        const direccionInput = document.getElementById('direccion-input');
+const buscarDireccionBtn = document.getElementById('buscar-direccion');
+
+if (buscarDireccionBtn) {
+    buscarDireccionBtn.addEventListener('click', async () => {
+        const direccion = direccionInput.value.trim();
+        if (!direccion) return alert("Ingresa una dirección válida.");
+        try {
+            const coords = await geocodificarDireccion(direccion);
+            if (!coords) return alert("No se pudo encontrar la dirección.");
+            
+            // Centra y marca en el mapa
+            if (marcadorDeRutaVisible) marcadorDeRutaVisible.remove();
+            marcadorDeRutaVisible = new maplibregl.Marker({ color: '#FF5733' })
+                .setLngLat(coords)
+                .addTo(map);
+
+            selectedDestinationCoords = coords;
+
+            // Calcula la ruta desde ubicación actual
+            await requestUserLocationOnce();
+            directionsControl.removeRoutes();
+            directionsControl.setOrigin(userCurrentCoords);
+            directionsControl.setDestination(coords);
+
+            inicializarVoz();
+            updateRouteStatus("Ruta calculada hacia dirección ingresada", "success");
+
+        } catch (err) {
+            console.error("Error al buscar dirección:", err);
+            alert("Ocurrió un error al buscar la dirección.");
+        }
+        });
+    }
+
     }
 
     // ✅ CORREGIDO: Añadir marcadores usando MapLibre
@@ -642,4 +677,15 @@ if (esIOS) {
             activarVozBtn.style.display = 'none';
         });
     }
+}
+async function geocodificarDireccion(direccion) {
+    const accessToken = 'pk.eyJ1IjoiaXJyZWJlbGRlIiwiYSI6ImNtZGpnM2Z5dDBtNWcya3B3bGVmbXl5eTEifQ.C4cj0wOtX3bBCZLs5Opr4g'; // tu token Mapbox
+    const localidad = 'Carhué, Buenos Aires, Argentina'; // contexto por defecto
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(direccion + ', ' + localidad)}.json?access_token=${accessToken}&limit=1&language=es`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Geocoding request failed.");
+    const data = await res.json();
+    if (data.features.length === 0) return null;
+    return data.features[0].geometry.coordinates; // [lon, lat]
 }

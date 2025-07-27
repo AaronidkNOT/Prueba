@@ -453,3 +453,55 @@ body, html {
 .mapboxgl-ctrl-directions {
     display: none !important;
 }
+/* Añade esto dentro de .search-controls o en una sección similar para organizar */
+.search-controls #direccion-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px; /* Espacio entre el input y el botón */
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    background-color: var(--bg-panel-secondary);
+    color: var(--text-light);
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-controls #direccion-input::placeholder {
+    color: var(--text-medium);
+}
+
+.search-controls #direccion-input:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 2px var(--primary-accent-darker);
+}
+
+/* Estilo para el botón "Ir a dirección" */
+.search-controls #buscar-direccion {
+    /* Reutiliza algunas propiedades de .button para consistencia */
+    background-color: var(--primary-accent); /* Color de acento para que destaque */
+    color: var(--text-dark); /* Texto oscuro para contraste */
+    width: 100%; /* Que ocupe todo el ancho disponible */
+    padding: 10px 15px; /* Ajusta el padding si es necesario */
+    font-weight: 600; /* Un poco más de peso para el texto */
+    border: none; /* Sin borde para un look más limpio */
+    border-radius: var(--border-radius-medium); /* Bordes redondeados */
+    box-shadow: var(--box-shadow-soft); /* Sutil sombra */
+    justify-content: center; /* Centrar el texto/icono si los tuviera */
+}
+
+.search-controls #buscar-direccion:hover {
+    background-color: var(--primary-accent-darker); /* Color más oscuro al pasar el ratón */
+    color: var(--text-light); /* Texto claro al pasar el ratón */
+    transform: translateY(-1px); /* Efecto de "levantar" ligeramente */
+}
+
+.search-controls #buscar-direccion:active {
+    transform: translateY(0); /* Vuelve a la posición normal al hacer clic */
+}
+
+.search-controls #buscar-direccion:focus-visible {
+    outline: 2px solid var(--primary-accent-darkest);
+    outline-offset: 2px;
+}
