@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const initialCoordinates = [-62.7588, -37.1789]; // Carhué [LONGITUD, LATITUD] para MapLibre
+    const initialCoordinates = [-62.7603381,-37.1796244]; // Carhué [LONGITUD, LATITUD]
     const initialZoom = 14;
     let activeMarker = null;
     let map;
@@ -27,9 +27,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- DATOS Y ESTADO ---
     let sitesData = [];
     let allReviews = {};
-    let markers = {}; // Objeto para guardar los marcadores de MapLibre
+    let markers = {};
     let selectedDestinationCoords = null;
-    let userCurrentCoords = null; // Guardará [lon, lat]
+    let userCurrentCoords = null;
     let myLocationMarker = null;
     let locationWatchId = null;
     let marcadorDeRutaVisible = null;
@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         };
         speechSynth = window.speechSynthesis;
-        // Precarga de voces para algunos navegadores
         const dummy = new SpeechSynthesisUtterance('');
         dummy.lang = 'es-ES';
         speechSynth.speak(dummy);
@@ -127,17 +126,35 @@ document.addEventListener('DOMContentLoaded', function () {
         sitesData = [
                 { id: 'ruinasEpecuen', name: 'Ruinas de Villa Epecuén', type: 'Atracción Turística', coordinates: [-62.8080, -37.1335], description: 'Impresionantes ruinas...', image: 'imagenes/epecuen.jpg', contact: 'No aplica', hours: 'Abierto siempre' },
                 { id: 'playaEcoSustentable', name: 'Playa Eco Sustentable', type: 'Atracción Turística', coordinates: [-62.795155, -37.139138], description: 'Espacio recreativo...', image: 'imagenes/ecoplaya.jpg', contact: 'Consultar', hours: 'Abierto siempre' },
+
+
+
+                { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Emergencias', coordinates: [-62.749849, -37.177169], description: 'Centro de salud...', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222 & 107 (EMERGENCIAS)', hours: 'Emergencias 24hs' },
+                { id: 'policia', name: 'Comisaría de Carhué', type: 'Emergencias', coordinates: [-62.762527, -37.17912284], description: 'Policía local...', image: 'imagenes/comisaria.jpg', contact: '(02936) 43-2211', hours: 'Emergencias 24hs' },
+                { id: 'bomberos', name: 'Bomberos Voluntarios de Carhué', type: 'Emergencias', coordinates: [-62.7640256, -37.1816937], description: 'Cuerpo de bomberos...', image: 'imagenes/bomberos.jpg', contact: '(02936) 43-2500 & 100 (EMERGENCIAS)', hours: 'Emergencias 24hs' },
+
+
+
                 { id: 'museoRegionalCarhue', name: 'Museo Regional Adolfo Alsina', type: 'Cultura y Ocio', coordinates: [-62.761820, -37.180942], description: 'Conserva la historia...', image: 'imagenes/museo.jpg', contact: '(02936) 43-0660', hours: 'Ver horarios' },
-                { id: 'cine', name: 'Cine Carhué', type: 'Cultura y Ocio', coordinates: [-62.760505, -37.178898], description: 'Cine local...', image: 'imagenes/cine.jpg', contact: 'Consultar', hours: 'Ver programación' },
+                { id: 'cine', name: 'Cine', type: 'Cultura y Ocio', coordinates: [-62.760505, -37.178898], description: 'Cine local...', image: 'imagenes/cine.jpg', contact: '(02936) 41-2400', hours: 'Ver programación' },
+                { id: 'iglesia', name: 'Iglesia', type: 'Cultura y Ocio', coordinates: [-62.760338, -37.179624], description: 'Iglesia local...', image: 'imagenes/iglesia.jpg', contact: '(02936) 43-2240', hours: 'Abierto a publico' },
+
+
+
                 { id: 'panaderiaMiSueño', name: 'Panaderia Mi Sueño', type: 'Gastronomía', coordinates: [-62.756694, -37.176980], description: 'Panaderia tradicional...', image: 'imagenes/panaderia_misueno.jpg', contact: 'Consultar', hours: '7-13hs, 16-20hs' },
                 { id: 'amoratacafe', name: 'Amorata Café', type: 'Gastronomía', coordinates: [-62.760814, -37.179045], description: 'Cafetería acogedora...', image: 'imagenes/amoratacarhue.webp', contact: 'Consultar', hours: 'Ver horarios' },
-                { id: 'lataperacafe', name: 'La Taperacafé', type: 'Gastronomía', coordinates: [-62.757273, -37.178711], description: 'Cafetería relajada...', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Ver horarios' },
-                { id: 'hotelCarhue', name: 'Gran Hotel Carhué', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
+                { id: 'lataperacafe', name: 'La Tapera Café', type: 'Gastronomía', coordinates: [-62.757273, -37.178711], description: 'Cafetería relajada...', image: 'imagenes/latapera.jpg', contact: '(02923) 48-7502', hours: 'Ver horarios' },
+
+
+
+                { id: 'hotelCarhue', name: 'Gran Hotel', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
+
+
+
                 { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-62.754341, -37.177378], description: 'Farmacia tradicional...', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Ver horarios de turno' },
                 { id: 'farmaciasarsur', name: 'Farmacia Sar Sur', type: 'Salud y Servicios', coordinates: [-62.751857, -37.178973], description: 'Farmacia con atención...', image: 'imagenes/farmaciasarsur.jpeg', contact: '(02936) 41-2231', hours: 'Ver horarios de turno' },
-                { id: 'farmaciadecarhue', name: 'Farmacia de Carhué', type: 'Salud y Servicios', coordinates: [-62.760849, -37.181812], description: 'Farmacia tradicional...', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Ver horarios de turno' },
-                { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-62.757621, -37.178410], description: 'Farmacia moderna...', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar', hours: 'Ver horarios de turno' },
-                { id: 'hospital', name: 'Hospital Municipal San Martín', type: 'Salud y Servicios', coordinates: [-62.749849, -37.177169], description: 'Centro de salud...', image: 'imagenes/hospitalcarhue.jpg', contact: '(02936) 43-2222 & 107 (EMERGENCIAS)', hours: 'Emergencias 24hs' },
+                { id: 'farmaciadecarhue', name: 'Farmacia de Carhué', type: 'Salud y Servicios', coordinates: [-62.76089726744166, -37.18192371406504], description: 'Farmacia tradicional...', image: 'imagenes/farmaciacarhue.jpg', contact: '(02936) 43-2662', hours: 'Ver horarios de turno' },
+                { id: 'farmaciaportela', name: 'Farmacia Portela', type: 'Salud y Servicios', coordinates: [-62.757654046491126, -37.17863110848528], description: 'Farmacia moderna...', image: 'imagenes/farmaciaportela.jpg', contact: 'Consultar', hours: 'Ver horarios de turno' },
         ];
     }
 
@@ -160,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initMap() {
-        const apiKey = '7kWbCoztWq2DGLp4Mwsm'; // Tu clave de API de MapTiler
+        const apiKey = '7kWbCoztWq2DGLp4Mwsm';
         const styleUrl = `https://api.maptiler.com/maps/streets-v2/style.json?key=${apiKey}`;
 
         map = new maplibregl.Map({
@@ -171,29 +188,25 @@ document.addEventListener('DOMContentLoaded', function () {
             pitch: 0,
             bearing: 0
         });
-
-        // ✅ Control de navegación sin opción de cambio de capa (satélite)
         map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
         const mapboxAccessToken = 'pk.eyJ1IjoiaXJyZWJlbGRlIiwiYSI6ImNtZGpnM2Z5dDBtNWcya3B3bGVmbXl5eTEifQ.C4cj0wOtX3bBCZLs5Opr4g';
 
-    // CÓDIGO CORREGIDO
-directionsControl = new MapboxDirections({
-    accessToken: mapboxAccessToken,
-    unit: 'metric',
-    profile: 'mapbox/driving-traffic',
-    language: 'es',
-    interactive: false, // <-- LA CLAVE: Desactiva la detección del ratón.
-    controls: {
-        instructions: false, // Oculta las instrucciones de texto, ya que las manejas tú.
-        profileSwitcher: false, // Oculta el selector de perfil (auto/bici/caminando).
-        inputs: false // Oculta los campos de origen/destino.
-    }
-});
+        directionsControl = new MapboxDirections({
+        accessToken: mapboxAccessToken,
+        unit: 'metric',
+        profile: 'mapbox/driving-traffic',
+        language: 'es',
+        interactive: false,
+        controls: {
+        instructions: false,
+        profileSwitcher: false,
+        inputs: false
+        }
+    });
 
     map.addControl(directionsControl, 'top-left');
     
     directionsControl.on('route', (e) => {
-    // Una vez que la ruta está lista, esperamos un instante.
     setTimeout(() => {
         if (userCurrentCoords) {
             
@@ -220,18 +233,15 @@ directionsControl = new MapboxDirections({
                 }
             }
 
-            // ✅ --- 3. OCULTAR PANEL DE INSTRUCCIONES (NUEVO) ---
-            // Buscamos el panel de direcciones por su clase CSS.
+            //  --- 3. Ocultar panel de instrucciones---
             const directionsPanel = document.querySelector('.mapboxgl-ctrl-directions');
             if (directionsPanel) {
-                // Si lo encontramos, lo ocultamos.
                 directionsPanel.style.display = 'none';
                 console.log('Panel de instrucciones de ruta oculto.');
             }
         }
     }, 100); 
 });
-        // Se añaden los marcadores al mapa
         sitesData.forEach(addMarkerForSite);
     }
 
@@ -267,13 +277,9 @@ directionsControl = new MapboxDirections({
             hideInfoPanel();
             hideSearchPanel();
         });
-
         if (rutaAutoBtn) {
             rutaAutoBtn.addEventListener('click', () => {
-                // ✅ NUEVO: Oculta el panel de información al hacer clic.
                 hideInfoPanel();
-
-                // Llama a las funciones que ya tenías para iniciar la ruta y la voz.
                 inicializarVoz();
                 mostrarRuta();
             });
@@ -286,17 +292,16 @@ directionsControl = new MapboxDirections({
         });
 
         const direccionInput = document.getElementById('direccion-input');
-const buscarDireccionBtn = document.getElementById('buscar-direccion');
+        const buscarDireccionBtn = document.getElementById('buscar-direccion');
 
-if (buscarDireccionBtn) {
-    buscarDireccionBtn.addEventListener('click', async () => {
-        const direccion = direccionInput.value.trim();
-        if (!direccion) return alert("Ingresa una dirección válida.");
+    if (buscarDireccionBtn) {
+        buscarDireccionBtn.addEventListener('click', async () => {
+            const direccion = direccionInput.value.trim();
+            if (!direccion) return alert("Ingresa una dirección válida.");
         try {
             const coords = await geocodificarDireccion(direccion);
             if (!coords) return alert("No se pudo encontrar la dirección.");
-            
-            // Centra y marca en el mapa
+    
             if (marcadorDeRutaVisible) marcadorDeRutaVisible.remove();
             marcadorDeRutaVisible = new maplibregl.Marker({ color: '#FF5733' })
                 .setLngLat(coords)
@@ -304,12 +309,12 @@ if (buscarDireccionBtn) {
 
             selectedDestinationCoords = coords;
 
-            // Calcula la ruta desde ubicación actual
             await requestUserLocationOnce();
             directionsControl.removeRoutes();
             directionsControl.setOrigin(userCurrentCoords);
             directionsControl.setDestination(coords);
 
+            hideSearchPanel();
             inicializarVoz();
             updateRouteStatus("Ruta calculada hacia dirección ingresada", "success");
 
@@ -322,26 +327,22 @@ if (buscarDireccionBtn) {
 
     }
 
-    // ✅ CORREGIDO: Añadir marcadores usando MapLibre
-    // VERSIÓN CORRECTA (los marcadores se crean pero quedan ocultos)
-function addMarkerForSite(site) {
-    if (!site.coordinates || site.coordinates.length !== 2) {
+    function addMarkerForSite(site) {
+        if (!site.coordinates || site.coordinates.length !== 2) {
         console.warn(`Sitio "${site.name}" no tiene coordenadas válidas.`);
         return;
     }
 
-    // Se crea el marcador pero NO se añade al mapa.
-    const marker = new maplibregl.Marker({ color: '#3FB1CE' })
+        const marker = new maplibregl.Marker({ color: '#3FB1CE' })
         .setLngLat(site.coordinates);
 
-    marker.getElement().addEventListener('click', (e) => {
+        marker.getElement().addEventListener('click', (e) => {
         e.stopPropagation();
         selectSiteFromMarker(site);
     });
 
-    // Solo lo guardamos en nuestro objeto de marcadores
     markers[site.id] = marker;
-}
+    }
 
     function hideInfoPanel() {
         infoPanel.classList.add('hidden');
@@ -374,20 +375,19 @@ function addMarkerForSite(site) {
         infoPanel.classList.remove('hidden');
         infoPanel.setAttribute('aria-hidden', 'false');
 
-        selectedDestinationCoords = site.coordinates; // [lon, lat]
+        selectedDestinationCoords = site.coordinates;
         updateRouteStatus('Destino seleccionado. Calcula la ruta o busca tu ubicación.', 'info');
         
         highlightMarker(site.id);
         updateActiveSearchResult(site.id);
     }
 
-    // ✅ CORREGIDO: Resaltar marcador con MapLibre
     function highlightMarker(siteId) {
         unhighlightActiveMarker();
         if (markers[siteId]) {
             activeMarker = markers[siteId];
-            activeMarker.remove(); // Quitar el marcador actual
-            activeMarker = new maplibregl.Marker({ color: '#3498db' }) // Crear uno nuevo con color azul
+            activeMarker.remove();
+            activeMarker = new maplibregl.Marker({ color: '#3498db' })
                 .setLngLat(markers[siteId].getLngLat())
                 .addTo(map);
             activeMarker.getElement().addEventListener('click', (e) => {
@@ -397,17 +397,15 @@ function addMarkerForSite(site) {
         }
     }
 
-    // ✅ CORREGIDO: Quitar resaltado del marcador
     function unhighlightActiveMarker() {
         if (activeMarker) {
             const siteId = currentSiteIdInput.value;
             const originalCoords = activeMarker.getLngLat();
-            activeMarker.remove(); // Quita el marcador resaltado
+            activeMarker.remove();
             
-            // Re-crea el marcador original
             if (markers[siteId]) {
-                 const site = sitesData.find(s => s.id === siteId);
-                 addMarkerForSite(site);
+                const site = sitesData.find(s => s.id === siteId);
+                addMarkerForSite(site);
             }
             activeMarker = null;
         }
@@ -441,7 +439,7 @@ function addMarkerForSite(site) {
         sortedCategories.forEach(category => {
             const details = document.createElement('details');
             details.className = 'category-group';
-            details.open = true;
+            details.open = false;
             const summary = document.createElement('summary');
             summary.textContent = category;
             const contentWrapper = document.createElement('div');
@@ -560,14 +558,13 @@ function addMarkerForSite(site) {
         });
     }
     
-    // ✅ CORREGIDO: Actualizar posición del usuario con MapLibre
     function updateUserPositionOnMap(position) {
         const { latitude: lat, longitude: lon } = position.coords;
         userCurrentCoords = [lon, lat]; // [lon, lat]
 
         if (!myLocationMarker) {
             const el = document.createElement('div');
-            el.className = 'user-location-marker'; // Se necesita CSS para estilizarlo
+            el.className = 'user-location-marker';
 
             myLocationMarker = new maplibregl.Marker({ element: el, anchor: 'center' })
                 .setLngLat(userCurrentCoords)
@@ -600,7 +597,6 @@ function addMarkerForSite(site) {
     }
 
     async function mostrarRuta() {
-    // Limpia marcadores anteriores y valida que haya un destino
     if (marcadorDeRutaVisible) { marcadorDeRutaVisible.remove(); }
     const destinationSiteId = currentSiteIdInput.value;
     if (!destinationSiteId) {
@@ -616,7 +612,6 @@ function addMarkerForSite(site) {
     inicializarVoz();
 
     try {
-        // Pide la ubicación actual del usuario si no la tenemos.
         if (!userCurrentCoords) {
             updateRouteStatus('Buscando tu ubicación...', 'loading');
             await requestUserLocationOnce();
@@ -626,22 +621,19 @@ function addMarkerForSite(site) {
             return;
         }
 
-        // Obtenemos las coordenadas del destino.
         const destinationSite = sitesData.find(site => site.id === destinationSiteId);
         const destinationCoords = destinationSite.coordinates;
 
-        // ✅ SIMPLIFICADO: Solo establecemos el origen y el destino.
-        // La animación ahora la maneja el evento 'route'.
         updateRouteStatus('Calculando ruta...', 'loading');
         directionsControl.removeRoutes();
         directionsControl.setOrigin(userCurrentCoords);
         directionsControl.setDestination(destinationCoords);
 
-    } catch (error) {
+        } catch (error) {
         console.error("Error al preparar la ruta:", error);
         updateRouteStatus('Hubo un error al preparar la ruta.', 'error');
+        }
     }
-}
 
     function updateRouteStatus(message, type = 'info') {
         if (!estadoRutaEl) return;
@@ -660,11 +652,10 @@ function addMarkerForSite(site) {
         return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
-    // Llama a la función de inicialización del script
     init();
 });
 
-// Código para iOS sin cambios
+// Código para iOS
 const esIOS = /iP(hone|ad|od)/i.test(navigator.userAgent);
 if (esIOS) {
     const activarVozBtn = document.getElementById('activarVozIOS');
@@ -680,12 +671,12 @@ if (esIOS) {
 }
 async function geocodificarDireccion(direccion) {
     const accessToken = 'pk.eyJ1IjoiaXJyZWJlbGRlIiwiYSI6ImNtZGpnM2Z5dDBtNWcya3B3bGVmbXl5eTEifQ.C4cj0wOtX3bBCZLs5Opr4g'; // tu token Mapbox
-    const localidad = 'Carhué, Buenos Aires, Argentina'; // contexto por defecto
+    const localidad = 'Carhué, Buenos Aires, Argentina';
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(direccion + ', ' + localidad)}.json?access_token=${accessToken}&limit=1&language=es`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("Geocoding request failed.");
     const data = await res.json();
     if (data.features.length === 0) return null;
-    return data.features[0].geometry.coordinates; // [lon, lat]
+    return data.features[0].geometry.coordinates;
 }

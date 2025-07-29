@@ -32,7 +32,7 @@
         <aside class="search-panel" role="search">
             <h2><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>Buscar Lugares</h2>
             <div class="search-controls">
-                <input type="text" id="search-input" placeholder="Ej: restaurante, museo..." aria-label="Campo de búsqueda de lugares">
+                <input type="text" id="search-input" placeholder="Ej: Restaurante, Museo..." aria-label="Campo de búsqueda de lugares">
                 <input type="text" id="direccion-input" placeholder="Ej: 25 de mayo 255" />
                 <button id="buscar-direccion" class="button">Ir a dirección</button>
 
@@ -43,7 +43,6 @@
 
         <main class="map-area" role="application" aria-label="Mapa interactivo de Carhué">
             <div id="map"></div>
-            <button id="toggleBasemapBtn" class="toggle-basemap-btn">🛰️ Satélite</button>
 
         </main>
 
@@ -66,7 +65,6 @@
                 <h4>Cómo llegar:</h4>
                 <div class="routing-buttons">
                     <button id="rutaAuto" class="button route-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"></path><path d="M19 17h2v-3h-2v3zM5 17h2v-3H5v3z"></path><path d="M12 17l-3-3h2V7h2v7h2l-3 3z" transform="scale(1,-1) translate(0, -24)"></path></svg>
                         Ruta
                     </button>
                 </div>
