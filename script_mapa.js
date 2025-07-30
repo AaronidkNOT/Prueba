@@ -147,8 +147,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-                { id: 'hotelCarhue', name: 'Gran Hotel', type: 'Alojamiento', coordinates: [-62.758782, -37.180358], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
-
+                { id: 'hotelcentrico', name: 'Gran Hotel', type: 'Alojamiento', coordinates: [-62.758745045175395, -37.18040404470492], description: 'Alojamiento céntrico...', image: 'imagenes/granhotel.jpg', contact: '(02936) 43-0440', hours: 'Recepción 24hs' },
+                { id: 'hotelparquetermal', name: 'Hotel Parque Termal', type: 'Alojamiento', coordinates: [-62.77053631577969, -37.165296000991354], description: 'Hotel con termas...', image: 'imagenes/hotelparquetermal.png', contact: '(02936) 15-40-4194', hours: 'Recepción 24hs' },
+                { id: 'hotelposada', name: 'Posada del Lago', type: 'Alojamiento', coordinates: [-62.74946, -37.1793948], description: 'Alojamiento con vista...', image: 'imagenes/posadadellago.jpg', contact: '(02923) 69-0099', hours: 'Recepción 24hs' },
+                { id: 'hoteltermas', name: 'Hotel Avenida Termas', type: 'Alojamiento', coordinates: [-62.756443509260606, -37.18373060397185], description: 'Hotel con termas...', image: 'imagenes/hotelavenidatermas.jpg', contact: '(02923) 64-7015', hours: 'Recepción 24hs' },
+                { id: 'hotelcristal', name: 'Hotel Cristal', type: 'Alojamiento', coordinates: [-62.756683264507394, -37.17800019524478], description: 'Hotel céntrico...', image: 'imagenes/hotelcristal.jpg', contact: '(02936) 42-0606', hours: 'Recepción 24hs' },
+                { id: 'hotelspatermal', name: 'Hotel Spa Termal', type: 'Alojamiento', coordinates: [-62.7526867831631, -37.17758586554732], description: 'Hotel con spa y termas...', image: 'imagenes/hotelspatermal.jpeg', contact: '(02936) 43-2887', hours: 'Recepción 24hs' },
+                { id: 'hotelmirage', name: 'Hotel Mirage Spa', type: 'Alojamiento', coordinates: [-62.74783569302745, -37.16991013632649], description: 'Hotel moderno...', image: 'imagenes/hotelmiragespa.jpg', contact: '(02923) 44-1035', hours: 'Recepción 24hs' },
 
 
                 { id: 'farmaciaDiaz', name: 'Farmacia Díaz', type: 'Salud y Servicios', coordinates: [-62.754341, -37.177378], description: 'Farmacia tradicional...', image: 'imagenes/farmaciadiaz.jpg', contact: '(02936) 41-0287', hours: 'Ver horarios de turno' },
